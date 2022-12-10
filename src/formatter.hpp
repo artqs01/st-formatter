@@ -2,6 +2,7 @@
 #define FROMATTER_HPP
 
 #include <cstddef>
+#include <ostream>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -20,12 +21,12 @@ namespace stf
 
 struct text_chunk
 {
-	size_t word_length;
+	std::string word;
 	size_t space_length;
 };
 
 std::vector<text_chunk> prepare_to_format(const std::string_view& buffer);
-std::string_view format(const std::string_view& buffer, size_t width);
+std::ostream& format(std::istream& in, std::ostream& out, size_t width);
 
 }
 
