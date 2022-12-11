@@ -59,7 +59,12 @@ void print_chunks(const std::vector<text_chunk>& text_chunks)
 
 std::string format_line(std::vector<text_chunk>::const_iterator first, std::vector<text_chunk>::const_iterator last)
 {
-	
+	std::string line;
+	for (auto chunk = first; chunk <= last; chunk++)
+	{
+		
+	}
+	return line;
 }
 
 std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
