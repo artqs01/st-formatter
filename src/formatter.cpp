@@ -14,12 +14,10 @@ size_t text_chunk::length() const {
 }
 
 std::string text_chunk::format() const {
-	std::string formatted_chunk;
-	std::fill_n(formatted_chunk.begin(), space_length, ' ');
-	return formatted_chunk + word;
+	return word + std::string(space_length, ' ');
 }
 
-std::vector<text_chunk> prepare_to_format(const std::string_view& buffer){
+std::vector<text_chunk> prepare_to_format(const std::string_view& buffer) {
 	std::vector<text_chunk> text_chunks;
 	size_t buffer_index = 0;
 	size_t next_space_index;
@@ -42,7 +40,6 @@ std::vector<text_chunk> prepare_to_format(const std::string_view& buffer){
 			text_chunks.push_back({.word = word, .space_length = 1});
 		}
 	} while (buffer_index < buffer.length());
-	text_chunks.front().space_length = 0;
 	return text_chunks;
 }
 
@@ -53,51 +50,60 @@ void print_chunks(const std::vector<text_chunk>& text_chunks) {
 }
 
 std::string format_line(
-	std::vector<text_chunk>::const_iterator first,
-	std::vector<text_chunk>::const_iterator last,
+	std::vector<text_chunk>::iterator first,
+	std::vector<text_chunk>::iterator last,
 	size_t width,
 	size_t chunks_length) {
-	std::string line = first->word;
+	std::string line;
 	size_t missing_spaces = width - chunks_length;
-	size_t missing_space_length = missing_spaces / (last - first + 1);
-	
-	for (auto chunk = first + 1; chunk <= last; chunk++)
+	size_t missing_space_length = missing_spaces / (last - first);
+	size_t missing_spaces_after_fill = missing_spaces % (last - first);
+	for (auto& chunk = first; chunk < last; chunk++)
 	{
+		chunk->space_length = missing_space_length;
+		if (missing_spaces_after_fill) {
+			chunk->space_length += 1;
+			missing_space_length--;
+		}
 		line += chunk->format();
 	}
+	line += last->word;
 	return line;
 }
+
+// size_t line_length(
+// 	std::vector<text_chunk>::iterator first,
+// 	std::vector<text_chunk>::iterator last) {
+// 	size_t length = 0;
+// 	for (auto& chunk = first; chunk < last; chunk++)
+// 	{
+// 		length += chunk->length();
+// 	}
+// 	length += last->word.length();
+// 	return length;
+// }
 
 std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
 	std::stringstream s;
 	s << in.rdbuf();
 	auto text_chunks = prepare_to_format(s.str());
-	if (text_chunks.empty()) {
-		return out;
-	}
 	auto line_begin = text_chunks.begin();
-	auto line_end = text_chunks.begin() + 1;
-	size_t line_length = text_chunks.begin()->word.length();
-	do {
-		if (line_end == text_chunks.end()) {
-			line_end--;
-			out << format_line(line_begin, line_end, width, line_length);
-			break;
-		}
-		else if (line_length < width) {
-			line_length += line_end->space_length;
-			line_length += (++line_end)->word.length();
-			continue;
+	auto line_end = text_chunks.begin();
+	size_t char_count = 0;
+	size_t chunk_count = 0;
+	while (line_end != text_chunks.end()) {
+		if (line_end->word.length() + char_count + chunk_count - 1 < width) {
+			chunk_count++;
+			char_count += line_end->word.length();
+			line_end++;
 		}
 		else {
-			if (line_begin != line_end) {
-				line_end--;
-			}
-			// aaaa usunac spacje i slowo
-			out << format_line(line_begin, line_end, width, line_length);
-			line_begin = line_end + 1;
+			out << format_line(line_begin, line_end, width, char_count + chunk_count - 1) << "\n";
+			chunk_count = 0;
+			char_count = 0;
+			line_begin = line_end;
 		}
-	} while (line_begin < text_chunks.end());
+	}
 	return out;
 }
 
