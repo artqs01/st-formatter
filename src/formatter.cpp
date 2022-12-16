@@ -55,55 +55,63 @@ std::string format_line(
 	size_t width,
 	size_t chunks_length) {
 	std::string line;
+	size_t space_count = last - first;
+	if (!space_count) {
+		line += first->word;
+		return line;
+	}
 	size_t missing_spaces = width - chunks_length;
-	size_t missing_space_length = missing_spaces / (last - first);
-	size_t missing_spaces_after_fill = missing_spaces % (last - first);
+	size_t missing_space_length = missing_spaces / space_count;
+	// std::cerr << "\n" << last - first << "\n";
+	size_t missing_spaces_after_fill = missing_spaces % space_count;
+	// std::cerr << "c len:" << chunks_length << "\tms len: " << missing_space_length << "\tmsaf: " << missing_spaces_after_fill << "\tms: " << missing_spaces << "\n";
 	for (auto& chunk = first; chunk < last; chunk++)
 	{
 		chunk->space_length = missing_space_length;
 		if (missing_spaces_after_fill) {
+			// std::cerr << "dupa";
 			chunk->space_length += 1;
-			missing_space_length--;
+			missing_spaces_after_fill--;
 		}
 		line += chunk->format();
 	}
+	// std::cerr << "\n";
+	// std::cerr << last->word;
 	line += last->word;
-	return line;
+	std::cerr << line.length() << "\n";
+	return "";
 }
-
-// size_t line_length(
-// 	std::vector<text_chunk>::iterator first,
-// 	std::vector<text_chunk>::iterator last) {
-// 	size_t length = 0;
-// 	for (auto& chunk = first; chunk < last; chunk++)
-// 	{
-// 		length += chunk->length();
-// 	}
-// 	length += last->word.length();
-// 	return length;
-// }
 
 std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
 	std::stringstream s;
 	s << in.rdbuf();
 	auto text_chunks = prepare_to_format(s.str());
+	// print_chunks(text_chunks);
 	auto line_begin = text_chunks.begin();
 	auto line_end = text_chunks.begin();
 	size_t char_count = 0;
 	size_t chunk_count = 0;
 	while (line_end != text_chunks.end()) {
-		if (line_end->word.length() + char_count + chunk_count - 1 < width) {
+		// std::cerr << "l len:\t" << line_end->word.length() + char_count + chunk_count << "\n";
+		if (line_end->word.length() + char_count + chunk_count < width) {
 			chunk_count++;
 			char_count += line_end->word.length();
 			line_end++;
 		}
 		else {
-			out << format_line(line_begin, line_end, width, char_count + chunk_count - 1) << "\n";
+			out << format_line(line_begin, line_end - 1, width, char_count + chunk_count - 1) << "\n";
+			// std::cerr << char_count + chunk_count - 1 << "\n";
+			// int i = 0;
+			// for (auto& c = line_begin; c <= line_end - 1; c++) {
+			// 	std::cerr << i++ << ": " << c->word << "\tdl sl: " << c->word.length() << "\tdl sp: " << c->space_length << "\n";
+			// }
+			// std::cerr << "\n\n";
 			chunk_count = 0;
 			char_count = 0;
 			line_begin = line_end;
 		}
 	}
+	out << format_line(line_begin, line_end - 1, width, char_count + chunk_count - 1) << "\n";
 	return out;
 }
 
