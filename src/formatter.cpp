@@ -49,6 +49,8 @@ void print_chunks(const std::vector<text_chunk>& text_chunks) {
 	}
 }
 
+// TODO: secure for words grater than width
+
 std::string format_line(
 	std::vector<text_chunk>::iterator first,
 	std::vector<text_chunk>::iterator last,
@@ -61,8 +63,8 @@ std::string format_line(
 		return line;
 	}
 	size_t missing_spaces = width - chunks_length;
-	size_t missing_space_length = missing_spaces / space_count;
-	// std::cerr << "\n" << last - first << "\n";
+	size_t missing_space_length = missing_spaces / space_count + 1;
+	// std::cerr << "\n" << space_count << "\n";
 	size_t missing_spaces_after_fill = missing_spaces % space_count;
 	// std::cerr << "c len:" << chunks_length << "\tms len: " << missing_space_length << "\tmsaf: " << missing_spaces_after_fill << "\tms: " << missing_spaces << "\n";
 	for (auto& chunk = first; chunk < last; chunk++)
@@ -78,8 +80,8 @@ std::string format_line(
 	// std::cerr << "\n";
 	// std::cerr << last->word;
 	line += last->word;
-	std::cerr << line.length() << "\n";
-	return "";
+	// std::cerr << line.length() << "\n";
+	return line;
 }
 
 std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
