@@ -17,7 +17,7 @@ std::string text_chunk::format() const {
 	return word + std::string(space_length, ' ');
 }
 
-std::vector<text_chunk> prepare_to_format(const std::string_view& buffer) {
+std::vector<text_chunk> load_chunks(const std::string_view& buffer) {
 	std::vector<text_chunk> text_chunks;
 	size_t buffer_index = 0;
 	size_t next_space_index;
@@ -48,8 +48,6 @@ void print_chunks(const std::vector<text_chunk>& text_chunks) {
 		std::cout << c.word << ": " << c.word.length() << ", " << c.space_length << "\n";
 	}
 }
-
-// TODO: secure for words grater than width
 
 std::string format_line(
 	std::vector<text_chunk>::iterator first,
@@ -84,10 +82,17 @@ std::string format_line(
 	return line;
 }
 
+std::vector<text_chunk> split(const text_chunk& word)
+{
+	std::vector<text_chunk> split;
+
+}
+
 std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
 	std::stringstream s;
 	s << in.rdbuf();
-	auto text_chunks = prepare_to_format(s.str());
+	auto text_chunks = load_chunks(s.str());
+	std::vector<text_chunk> split_word;
 	// print_chunks(text_chunks);
 	auto line_begin = text_chunks.begin();
 	auto line_end = text_chunks.begin();
@@ -95,7 +100,14 @@ std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
 	size_t chunk_count = 0;
 	while (line_end != text_chunks.end()) {
 		// std::cerr << "l len:\t" << line_end->word.length() + char_count + chunk_count << "\n";
-		if (line_end->word.length() + char_count + chunk_count < width) {
+		if (line_end->word.length() >= width)
+		{
+			out << format_line(line_begin, line_end - 1, width, char_count + chunk_count - 1) << "\n";
+			line_begin = line_end;
+			// split and catch the chunks
+			split_word = split(*line_end);
+		}
+		else if (line_end->word.length() + char_count + chunk_count < width) {
 			chunk_count++;
 			char_count += line_end->word.length();
 			line_end++;
