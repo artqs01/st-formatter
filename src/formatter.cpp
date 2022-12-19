@@ -82,7 +82,7 @@ std::string format_line(
 	return line;
 }
 
-std::vector<text_chunk> split(const text_chunk& word)
+std::vector<text_chunk> split(const text_chunk& word, size_t width)
 {
 	std::vector<text_chunk> split;
 
@@ -99,18 +99,26 @@ std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
 	size_t char_count = 0;
 	size_t chunk_count = 0;
 	while (line_end != text_chunks.end()) {
-		// std::cerr << "l len:\t" << line_end->word.length() + char_count + chunk_count << "\n";
-		if (line_end->word.length() >= width)
-		{
-			out << format_line(line_begin, line_end - 1, width, char_count + chunk_count - 1) << "\n";
-			line_begin = line_end;
-			// split and catch the chunks
-			split_word = split(*line_end);
-		}
-		else if (line_end->word.length() + char_count + chunk_count < width) {
+		if (line_end->word.length() + char_count + chunk_count < width) {
 			chunk_count++;
 			char_count += line_end->word.length();
 			line_end++;
+		}
+		// std::cerr << "l len:\t" << line_end->word.length() + char_count + chunk_count << "\n";
+		else if (line_end->word.length() == width) {
+			out << format_line(line_begin, line_end - 1, width, char_count + chunk_count - 1) << "\n"
+				<< line_end->word << "\n";
+			char_count = 0;
+			chunk_count = 0;
+			line_begin = ++line_end;
+		}
+		else if (line_end->word.length() > width)
+		{
+			out << format_line(line_begin, line_end - 1, width, char_count + chunk_count - 1) << "\n";
+			line_begin = line_end;
+			split_word = split(*line_end, width);
+			text_chunks.insert(line_end, split_word.begin(), split_word.end());
+			print_chunks(text_chunks);
 		}
 		else {
 			out << format_line(line_begin, line_end - 1, width, char_count + chunk_count - 1) << "\n";
@@ -125,7 +133,10 @@ std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
 			line_begin = line_end;
 		}
 	}
-	out << format_line(line_begin, line_end - 1, width, char_count + chunk_count - 1) << "\n";
+	std::string last_line;
+	for (auto& chunk = line_begin; chunk < line_end; chunk++)
+		last_line += chunk->format();
+	out << last_line;
 	return out;
 }
 
