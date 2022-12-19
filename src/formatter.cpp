@@ -82,10 +82,18 @@ std::string format_line(
 	return line;
 }
 
-std::vector<text_chunk> split(const text_chunk& word, size_t width)
+std::vector<text_chunk> split(const text_chunk& chunk, size_t width)
 {
 	std::vector<text_chunk> split;
-
+	size_t begin_index;
+	std::string word;
+	for (begin_index = 0; begin_index + width - 1 < chunk.word.length(); begin_index += width - 1) {
+		word = chunk.word.substr(begin_index, width - 1) + "-";
+		split.push_back({.word = word, .space_length = 0});
+	}
+	word = chunk.word.substr(begin_index, chunk.word.length() - begin_index);
+	split.push_back({.word = word, .space_length = 0});
+	return split;
 }
 
 std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
@@ -98,6 +106,28 @@ std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
 	auto line_end = text_chunks.begin();
 	size_t char_count = 0;
 	size_t chunk_count = 0;
+	// first iteration
+	if (line_end->word.length() < width) {
+			chunk_count++;
+			char_count += line_end->word.length();
+			line_end++;
+	}
+	else if (line_end->word.length() == width) {
+		out << format_line(line_begin, line_end, width, char_count + chunk_count - 1) << "\n"
+			<< line_end->word << "\n";
+		char_count = 0;
+		chunk_count = 0;
+		line_begin = ++line_end;
+	}
+	else 
+	{
+		out << format_line(line_begin, line_end, width, char_count + chunk_count - 1) << "\n";
+		split_word = split(*line_end, width);
+		text_chunks.insert(line_end + 1, split_word.begin(), split_word.end());
+		line_begin = ++line_end;
+	}
+
+	// main loop
 	while (line_end != text_chunks.end()) {
 		if (line_end->word.length() + char_count + chunk_count < width) {
 			chunk_count++;
@@ -115,10 +145,9 @@ std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
 		else if (line_end->word.length() > width)
 		{
 			out << format_line(line_begin, line_end - 1, width, char_count + chunk_count - 1) << "\n";
-			line_begin = line_end;
 			split_word = split(*line_end, width);
 			text_chunks.insert(line_end, split_word.begin(), split_word.end());
-			print_chunks(text_chunks);
+			line_begin = ++line_end;
 		}
 		else {
 			out << format_line(line_begin, line_end - 1, width, char_count + chunk_count - 1) << "\n";
@@ -133,6 +162,8 @@ std::ostream& format(std::istream& in, std::ostream& out, size_t width) {
 			line_begin = line_end;
 		}
 	}
+
+	// last iteration
 	std::string last_line;
 	for (auto& chunk = line_begin; chunk < line_end; chunk++)
 		last_line += chunk->format();
