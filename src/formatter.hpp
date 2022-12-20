@@ -27,12 +27,15 @@ struct text_chunk
 
 std::vector<text_chunk> load_chunks(const std::string_view& buffer);
 std::string format_line(
-	std::vector<text_chunk>::iterator first,
-	std::vector<text_chunk>::iterator last,
+	std::vector<text_chunk>& text_chunks,
+	size_t begin_index,
+	size_t end_index,
 	size_t width,
 	size_t chunks_length);
 std::vector<text_chunk> split(const text_chunk& word);
-std::ostream& format(std::istream& in, std::ostream& out, size_t width);
+std::ostream& format_fill(std::istream& in, std::ostream& out, const size_t width);
+
+// debug functions
 void print_chunks(const std::vector<text_chunk>& text_chunks);
 
 }
