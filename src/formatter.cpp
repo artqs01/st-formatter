@@ -197,16 +197,6 @@ std::ostream& format_wrap_text(
 	std::stringstream tmp;
 	tmp << in.rdbuf();
 	std::string buffer = tmp.str();
-	// char c;
-	// for (size_t i = 0; i < buffer.size();) {
-	// 	c = buffer[i];
-	// 	if (std::isspace(c) && c != ' ') {
-	// 		buffer.erase(i,1);
-	// 	}
-	// 	else {
-	// 		i++;
-	// 	}
-	// }
 
 	size_t line_begin = 0;
 	size_t line_end = width;
@@ -216,10 +206,20 @@ std::ostream& format_wrap_text(
 		if (std::isspace(buffer[line_begin])) {
 			do line_begin++; while (std::isspace(buffer[line_begin]));
 		}
-		if (std::isspace(buffer[line_end]) || std::isspace(buffer[line_end - 1])) {
+		if (std::isspace(buffer[line_end - 1])) {
 			out << buffer.substr(line_begin, width) << "\n";
 			line_begin = line_end;
 			line_end += width;
+		}
+		else if (std::isspace(buffer[line_end])) {
+			out << buffer.substr(line_begin, width) << "\n";
+			line_begin = line_end + 1;
+			line_end += width + 1;
+		}
+		else if (std::isspace(buffer[line_end - 2])) {
+			out << buffer.substr(line_begin, width - 2) << "\n";
+			line_begin = line_end - 1;
+			line_end += width - 1;
 		}
 		else {
 			out << buffer.substr(line_begin, width - 1) << "-\n";
